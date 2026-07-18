@@ -1,33 +1,38 @@
 # ==========================
 # Python / Django
 # ==========================
-__pycache__/
+**/__pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 
 backend/db.sqlite3
+backend/media/
 
 .venv/
 venv/
 env/
 
-*.log
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+.coverage
+htmlcov/
 
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # ==========================
-# React / Vite / TypeScript
+# Node / React / Vite
 # ==========================
-frontend/browser/node_modules/
-frontend/browser/dist/
+**/node_modules/
+**/dist/
+**/.vite/
+*.tsbuildinfo
 
-# Vite cache
-frontend/browser/.vite/
-
-# npm/yarn/pnpm logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -36,19 +41,16 @@ pnpm-debug.log*
 # ==========================
 # Flutter
 # ==========================
-frontend/mobile/.dart_tool/
-frontend/mobile/.flutter-plugins
-frontend/mobile/.flutter-plugins-dependencies
-frontend/mobile/build/
-frontend/mobile/.packages
-frontend/mobile/.metadata
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/build/
+**/.packages
+**/.metadata
 
-# Android
-frontend/mobile/android/.gradle/
-frontend/mobile/android/local.properties
-
-# iOS
-frontend/mobile/ios/Pods/
+**/.gradle/
+**/local.properties
+**/Pods/
 
 # ==========================
 # IDEs
@@ -57,7 +59,7 @@ frontend/mobile/ios/Pods/
 .idea/
 
 # ==========================
-# OS files
+# OS
 # ==========================
 .DS_Store
 Thumbs.db
