@@ -63,6 +63,28 @@ workflows:
             --no-codesign \
             --dart-define=API_BASE_URL="$API_BASE_URL"
 
+      - name: Inspect widget extension
+  script: |
+    WIDGET_PATH="build/ios/iphoneos/Runner.app/PlugIns/NextSetWidget.appex"
+
+    echo "===== Widget files ====="
+    find "$WIDGET_PATH" -maxdepth 2 -print
+
+    echo ""
+    echo "===== Widget Info.plist ====="
+    plutil -p "$WIDGET_PATH/Info.plist"
+
+    echo ""
+    echo "===== Widget executable ====="
+    file "$WIDGET_PATH/NextSetWidget"
+
+    echo ""
+    echo "===== App plug-ins ====="
+    find \
+      build/ios/iphoneos/Runner.app/PlugIns \
+      -maxdepth 2 \
+      -print
+
       - name: Verify widget extension
         script: |
           echo "Searching for embedded widget extensions:"
