@@ -37,14 +37,14 @@ workflows:
           pod install
           cd ..
 
-      - name: Build unsigned iOS app
+      - name: Build unsigned release iOS app
         script: |
           flutter build ios \
-            --debug \
+            --release \
             --no-codesign \
-            --dart-define=API_BASE_URL=172.20.10.3
+            --dart-define=API_BASE_URL="$API_BASE_URL"
 
-      - name: Package unsigned IPA
+      - name: Package unsigned release IPA
         script: |
           rm -rf build/ios/ipa_payload
           mkdir -p build/ios/ipa_payload/Payload
@@ -70,4 +70,3 @@ workflows:
     artifacts:
       - build/ios/FestivalCompanion-unsigned.ipa
       - build/ios/iphoneos/Runner.app
-      - flutter_drive.log
