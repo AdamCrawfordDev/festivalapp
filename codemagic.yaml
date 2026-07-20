@@ -4,7 +4,6 @@ workflows:
 
     instance_type: mac_mini_m2
     max_build_duration: 60
-
     working_directory: frontend/mobile
 
     environment:
@@ -24,7 +23,7 @@ workflows:
         - $HOME/Library/Caches/CocoaPods
 
     scripts:
-      - name: Check Flutter installation
+      - name: Check build tools
         script: |
           flutter --version
           xcodebuild -version
@@ -41,7 +40,7 @@ workflows:
 
           ruby ios/scripts/add_widget_target.rb
 
-          echo "Available Xcode targets:"
+          echo "===== Available Xcode targets ====="
 
           xcodebuild \
             -project ios/Runner.xcodeproj \
@@ -55,6 +54,7 @@ workflows:
 
       - name: Build unsigned release iOS app
         script: |
+          echo "Building Flutter app"
           echo "API_BASE_URL=$API_BASE_URL"
           echo "WIDGET_API_URL=$WIDGET_API_URL"
 
@@ -68,18 +68,33 @@ workflows:
           WIDGET_PATH="build/ios/iphoneos/Runner.app/PlugIns/NextSetWidget.appex"
 
           echo "===== Widget files ====="
-          find "$WIDGET_PATH" -maxdepth 2 -print
+
+          find "$WIDGET_PATH" \
+            -maxdepth 2 \
+            -print
 
           echo ""
           echo "===== Widget Info.plist ====="
-          plutil -p "$WIDGET_PATH/Info.plist"
+
+          plutil -p \
+            "$WIDGET_PATH/Info.plist"
 
           echo ""
           echo "===== Widget executable ====="
-          file "$WIDGET_PATH/NextSetWidget"
+
+          file \
+            "$WIDGET_PATH/NextSetWidget"
+
+          echo ""
+          echo "===== Widget executable architectures ====="
+
+          lipo \
+            -info \
+            "$WIDGET_PATH/NextSetWidget"
 
           echo ""
           echo "===== App plug-ins ====="
+
           find \
             build/ios/iphoneos/Runner.app/PlugIns \
             -maxdepth 2 \
@@ -87,7 +102,9 @@ workflows:
 
       - name: Verify widget extension
         script: |
-          echo "Searching for embedded widget extensions:"
+          WIDGET_PATH="build/ios/iphoneos/Runner.app/PlugIns/NextSetWidget.appex"
+
+          echo "===== Embedded widget extensions ====="
 
           find \
             build/ios/iphoneos/Runner.app \
@@ -96,47 +113,56 @@ workflows:
             -name "*.appex" \
             -print
 
-          test -d \
-            build/ios/iphoneos/Runner.app/PlugIns/NextSetWidget.appex
+          test -d "$WIDGET_PATH"
+          test -f "$WIDGET_PATH/Info.plist"
+          test -f "$WIDGET_PATH/NextSetWidget"
 
           echo "NextSetWidget.appex was embedded successfully."
 
       - name: Package unsigned release IPA
         script: |
-          rm -rf build/ios/ipa_payload
+          IPA_PATH="build/ios/FestivalCompanion-unsigned.ipa"
+          PAYLOAD_PATH="build/ios/ipa_payload/Payload"
+
+          rm -rf \
+            build/ios/ipa_payload
+
+          rm -f \
+            "$IPA_PATH"
 
           mkdir -p \
-            build/ios/ipa_payload/Payload
+            "$PAYLOAD_PATH"
 
           cp -R \
             build/ios/iphoneos/Runner.app \
-            build/ios/ipa_payload/Payload/Runner.app
+            "$PAYLOAD_PATH/Runner.app"
 
           ditto \
             -c \
             -k \
             --sequesterRsrc \
             --keepParent \
-            build/ios/ipa_payload/Payload \
-            build/ios/FestivalCompanion-unsigned.ipa
+            "$PAYLOAD_PATH" \
+            "$IPA_PATH"
 
-          echo "Created IPA:"
+          echo "===== Created IPA ====="
 
           ls -lh \
-            build/ios/FestivalCompanion-unsigned.ipa
+            "$IPA_PATH"
 
-          echo "Embedded extensions inside IPA:"
+          echo ""
+          echo "===== Embedded extensions inside IPA ====="
 
-          unzip -l \
-            build/ios/FestivalCompanion-unsigned.ipa |
-            grep -E "PlugIns|NextSetWidget\.appex" ||
+          unzip -l "$IPA_PATH" |
+            grep -E \
+              "Payload/Runner\.app/PlugIns/NextSetWidget\.appex" ||
             true
 
-          echo "Initial IPA contents:"
+          echo ""
+          echo "===== Initial IPA contents ====="
 
-          unzip -l \
-            build/ios/FestivalCompanion-unsigned.ipa |
-            head -40
+          unzip -l "$IPA_PATH" |
+            head -50
 
     artifacts:
       - build/ios/FestivalCompanion-unsigned.ipa
