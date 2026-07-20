@@ -108,48 +108,10 @@ class AppScaffold
   final StatefulNavigationShell
       navigationShell;
 
-  void _selectDestination(
-    int index,
-  ) {
-    navigationShell.goBranch(
-      index,
-      initialLocation:
-          index ==
-              navigationShell.currentIndex,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar:
-          NavigationBar(
-        selectedIndex:
-            navigationShell.currentIndex,
-        onDestinationSelected:
-            _selectDestination,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(
-              Icons.event_outlined,
-            ),
-            selectedIcon: Icon(
-              Icons.event,
-            ),
-            label: 'Festivals',
-          ),
-          NavigationDestination(
-            icon: Icon(
-              Icons.favorite_outline,
-            ),
-            selectedIcon: Icon(
-              Icons.favorite,
-            ),
-            label: 'My Schedule',
-          ),
-        ],
-      ),
     );
   }
 }

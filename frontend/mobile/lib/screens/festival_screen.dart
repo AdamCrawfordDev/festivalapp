@@ -2,9 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../features/festivals/offline_festival_controller.dart';
+
 import '../features/festivals/festival_detail_controller.dart';
 import '../features/festivals/festival_sets_controller.dart';
+import '../features/festivals/offline_festival_controller.dart';
 import '../models/festival.dart';
 import '../models/festival_set.dart';
 import '../utils/schedule_utils.dart';
@@ -21,8 +22,7 @@ enum FestivalScheduleView {
   timeline,
 }
 
-class FestivalScreen
-    extends ConsumerStatefulWidget {
+class FestivalScreen extends ConsumerStatefulWidget {
   const FestivalScreen({
     required this.festivalId,
     this.scrollToSchedule = false,
@@ -33,8 +33,7 @@ class FestivalScreen
   final bool scrollToSchedule;
 
   @override
-  ConsumerState<FestivalScreen>
-      createState() {
+  ConsumerState<FestivalScreen> createState() {
     return _FestivalScreenState();
   }
 }
@@ -47,6 +46,9 @@ class _FestivalScreenState
   final GlobalKey _scheduleKey =
       GlobalKey();
 
+  final TextEditingController _searchController =
+      TextEditingController();
+
   FestivalScheduleFilter _filter =
       FestivalScheduleFilter.all;
 
@@ -54,10 +56,6 @@ class _FestivalScreenState
       FestivalScheduleView.time;
 
   DateTime? _selectedDay;
-
-  final TextEditingController
-      _searchController =
-      TextEditingController();
 
   String _searchQuery = '';
 
@@ -101,12 +99,11 @@ class _FestivalScreenState
   }
 
   Future<void> _scrollToSchedule() async {
-    /*
-     * The schedule is built only after the festival
-     * and set requests finish, so retry for a few
-     * frames until its BuildContext exists.
-     */
-    for (var attempt = 0; attempt < 20; attempt++) {
+    for (
+      var attempt = 0;
+      attempt < 20;
+      attempt++
+    ) {
       if (!mounted) {
         return;
       }
@@ -133,14 +130,14 @@ class _FestivalScreenState
   }
 
   Future<void> _refresh() async {
-  await ref
-      .read(
-        offlineFestivalProvider(
-          widget.festivalId,
-        ).notifier,
-      )
-      .forceSync();
-}
+    await ref
+        .read(
+          offlineFestivalProvider(
+            widget.festivalId,
+          ).notifier,
+        )
+        .forceSync();
+  }
 
   void _clearSearch() {
     _searchController.clear();
@@ -331,28 +328,24 @@ class _FestivalScreenState
       displayedSets,
     );
 
-    final isTimelineView =
-        _view ==
-        FestivalScheduleView.timeline;
-
     return [
       SliverToBoxAdapter(
         child: KeyedSubtree(
           key: _scheduleKey,
           child: Padding(
             padding:
-                EdgeInsets.fromLTRB(
+                const EdgeInsets
+                    .fromLTRB(
               16,
-              isTimelineView ? 12 : 22,
+              22,
               16,
               14,
             ),
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment
-                    .stretch,
-            children: [
-              if (!isTimelineView) ...[
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment
+                      .stretch,
+              children: [
                 Row(
                   children: [
                     Expanded(
@@ -468,143 +461,134 @@ class _FestivalScreenState
                     });
                   },
                 ),
-              ],
-              if (
-                availableDays.isNotEmpty
-              ) ...[
-                if (!isTimelineView)
+                if (
+                  availableDays.isNotEmpty
+                ) ...[
                   const SizedBox(
                     height: 16,
                   ),
-                SizedBox(
-                  height: 42,
-                  child:
-                      ListView.separated(
-                    scrollDirection:
-                        Axis.horizontal,
-                    itemCount:
-                        availableDays
-                            .length,
-                    separatorBuilder:
-                        (
-                          context,
-                          index,
-                        ) {
-                      return const SizedBox(
-                        width: 8,
-                      );
-                    },
-                    itemBuilder:
-                        (
-                          context,
-                          index,
-                        ) {
-                      final day =
-                          availableDays[
-                            index
-                          ];
+                  SizedBox(
+                    height: 42,
+                    child:
+                        ListView.separated(
+                      scrollDirection:
+                          Axis.horizontal,
+                      itemCount:
+                          availableDays
+                              .length,
+                      separatorBuilder:
+                          (
+                            context,
+                            index,
+                          ) {
+                        return const SizedBox(
+                          width: 8,
+                        );
+                      },
+                      itemBuilder:
+                          (
+                            context,
+                            index,
+                          ) {
+                        final day =
+                            availableDays[
+                              index
+                            ];
 
-                      final isSelected =
-                          day ==
-                          selectedDay;
+                        final isSelected =
+                            day ==
+                            selectedDay;
 
-                      return ChoiceChip(
-                        selected:
-                            isSelected,
-                        onSelected:
-                            (_) {
-                          setState(() {
-                            _selectedDay =
-                                day;
-                          });
-                        },
-                        label: Text(
-                          DateFormat(
-                            'EEE d MMM',
-                          ).format(day),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-              const SizedBox(
-                height: 14,
-              ),
-              Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment
-                        .stretch,
-                children: [
-                  Text(
-                    'View',
-                    style:
-                        Theme.of(
-                      context,
-                    )
-                            .textTheme
-                            .titleSmall,
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  SegmentedButton<
-                    FestivalScheduleView
-                  >(
-                    segments: const [
-                      ButtonSegment(
-                        value:
-                            FestivalScheduleView
-                                .time,
-                        icon: Icon(
-                          Icons
-                              .view_agenda_outlined,
-                        ),
-                        label: Text(
-                          'Time',
-                        ),
-                      ),
-                      ButtonSegment(
-                        value:
-                            FestivalScheduleView
-                                .stage,
-                        icon: Icon(
-                          Icons
-                              .festival_outlined,
-                        ),
-                        label: Text(
-                          'Stage',
-                        ),
-                      ),
-                      ButtonSegment(
-                        value:
-                            FestivalScheduleView
-                                .timeline,
-                        icon: Icon(
-                          Icons
-                              .timeline_outlined,
-                        ),
-                        label: Text(
-                          'Timeline',
-                        ),
-                      ),
-                    ],
-                    selected: {
-                      _view,
-                    },
-                    showSelectedIcon:
-                        false,
-                    onSelectionChanged:
-                        (selected) {
-                      setState(() {
-                        _view =
-                            selected.first;
-                      });
-                    },
+                        return ChoiceChip(
+                          selected:
+                              isSelected,
+                          onSelected:
+                              (_) {
+                            setState(() {
+                              _selectedDay =
+                                  day;
+                            });
+                          },
+                          label: Text(
+                            DateFormat(
+                              'EEE d MMM',
+                            ).format(day),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
-              ),
-            ],
+                const SizedBox(
+                  height: 14,
+                ),
+                Text(
+                  'View',
+                  style:
+                      Theme.of(
+                    context,
+                  )
+                          .textTheme
+                          .titleSmall,
+                ),
+                const SizedBox(
+                  height: 8,
+                ),
+                SegmentedButton<
+                  FestivalScheduleView
+                >(
+                  segments: const [
+                    ButtonSegment(
+                      value:
+                          FestivalScheduleView
+                              .time,
+                      icon: Icon(
+                        Icons
+                            .view_agenda_outlined,
+                      ),
+                      label: Text(
+                        'Time',
+                      ),
+                    ),
+                    ButtonSegment(
+                      value:
+                          FestivalScheduleView
+                              .stage,
+                      icon: Icon(
+                        Icons
+                            .festival_outlined,
+                      ),
+                      label: Text(
+                        'Stage',
+                      ),
+                    ),
+                    ButtonSegment(
+                      value:
+                          FestivalScheduleView
+                              .timeline,
+                      icon: Icon(
+                        Icons
+                            .timeline_outlined,
+                      ),
+                      label: Text(
+                        'Timeline',
+                      ),
+                    ),
+                  ],
+                  selected: {
+                    _view,
+                  },
+                  showSelectedIcon:
+                      false,
+                  onSelectionChanged:
+                      (selected) {
+                    setState(() {
+                      _view =
+                          selected.first;
+                    });
+                  },
+                ),
+              ],
             ),
           ),
         ),
@@ -638,7 +622,8 @@ class _FestivalScreenState
       )
         SliverPadding(
           padding:
-              const EdgeInsets.fromLTRB(
+              const EdgeInsets
+                  .fromLTRB(
             16,
             0,
             16,
@@ -679,7 +664,8 @@ class _FestivalScreenState
       )
         SliverPadding(
           padding:
-              const EdgeInsets.fromLTRB(
+              const EdgeInsets
+                  .fromLTRB(
             16,
             0,
             16,
@@ -721,7 +707,8 @@ class _FestivalScreenState
       else
         SliverPadding(
           padding:
-              const EdgeInsets.fromLTRB(
+              const EdgeInsets
+                  .fromLTRB(
             16,
             0,
             16,
@@ -772,8 +759,10 @@ class _FestivalScreenState
           );
 
     return {
-      for (final stageName
-          in stageNames)
+      for (
+        final stageName
+            in stageNames
+      )
         stageName:
             grouped[stageName]!
               ..sort(
@@ -1330,9 +1319,6 @@ class _FestivalHeader
       expandedHeight: 330,
       pinned: true,
       stretch: true,
-      title: Text(
-        festival.name,
-      ),
       flexibleSpace:
           FlexibleSpaceBar(
         background: Stack(

@@ -8,7 +8,7 @@ class ScheduleWidgetService {
   ScheduleWidgetService._();
 
   static const String appGroupId =
-      'group.com.adam.festivalapp';
+      'group.com.adam.festivalcompanion';
 
   static const String iosWidgetName =
       'NextSetWidget';
