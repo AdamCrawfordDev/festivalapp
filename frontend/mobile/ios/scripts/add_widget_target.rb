@@ -14,19 +14,11 @@ project =
 target_name =
   "NextSetWidget"
 
-existing_target =
-  project.targets.find do |target|
-    target.name == target_name
-  end
+bundle_identifier =
+  "com.adam.festivalcompanion.NextSetWidget"
 
-if existing_target
-  puts(
-    "#{target_name} target already exists."
-  )
-
-  project.save
-  exit 0
-end
+deployment_target =
+  "17.0"
 
 runner_target =
   project.targets.find do |target|
@@ -39,19 +31,39 @@ unless runner_target
   )
 end
 
-deployment_target =
-  "17.0"
-
 widget_target =
-  project.new_target(
-    :app_extension,
-    target_name,
-    :ios,
-    deployment_target
-  )
+  project.targets.find do |target|
+    target.name == target_name
+  end
 
-widget_target.product_name =
-  target_name
+if widget_target
+  puts(
+    "Repairing existing #{target_name} target."
+  )
+else
+  widget_target =
+    project.new_target(
+      :app_extension,
+      target_name,
+      :ios,
+      deployment_target
+    )
+
+  puts(
+    "Created #{target_name} target."
+  )
+end
+
+# Explicitly name the extension product. Without this,
+# Xcode may try to produce a file named only ".appex".
+widget_target.product_reference.name =
+  "#{target_name}.appex"
+
+widget_target.product_reference.path =
+  "#{target_name}.appex"
+
+widget_target.product_reference.explicit_file_type =
+  "wrapper.app-extension"
 
 widget_group =
   project.main_group.find_subpath(
@@ -67,85 +79,121 @@ widget_group.path =
   target_name
 
 swift_reference =
+  widget_group.files.find do |file|
+    file.path ==
+      "NextSetWidget.swift"
+  end
+
+swift_reference ||=
   widget_group.new_file(
     "NextSetWidget.swift"
   )
 
 info_reference =
+  widget_group.files.find do |file|
+    file.path ==
+      "Info.plist"
+  end
+
+info_reference ||=
   widget_group.new_file(
     "Info.plist"
   )
 
-widget_target
-  .source_build_phase
-  .add_file_reference(
-    swift_reference
-  )
-
-widget_target.build_configurations.each do |configuration|
-  settings =
-    configuration.build_settings
-
-  settings[
-    "PRODUCT_BUNDLE_IDENTIFIER"
-  ] =
-    "com.adam.festivalcompanion.NextSetWidget"
-
-  settings[
-    "INFOPLIST_FILE"
-  ] =
-    "NextSetWidget/Info.plist"
-
-  settings[
-    "SWIFT_VERSION"
-  ] =
-    "5.0"
-
-  settings[
-    "IPHONEOS_DEPLOYMENT_TARGET"
-  ] =
-    deployment_target
-
-  settings[
-    "TARGETED_DEVICE_FAMILY"
-  ] =
-    "1,2"
-
-  settings[
-    "SKIP_INSTALL"
-  ] =
-    "YES"
-
-  settings[
-    "APPLICATION_EXTENSION_API_ONLY"
-  ] =
-    "YES"
-
-  settings[
-    "GENERATE_INFOPLIST_FILE"
-  ] =
-    "NO"
-
-  settings[
-    "MARKETING_VERSION"
-  ] =
-    "1.0"
-
-  settings[
-    "CURRENT_PROJECT_VERSION"
-  ] =
-    "1"
-
-  settings[
-    "CODE_SIGNING_ALLOWED"
-  ] =
-    "NO"
-
-  settings[
-    "CODE_SIGNING_REQUIRED"
-  ] =
-    "NO"
+unless widget_target
+         .source_build_phase
+         .files_references
+         .include?(
+           swift_reference
+         )
+  widget_target
+    .source_build_phase
+    .add_file_reference(
+      swift_reference
+    )
 end
+
+widget_target
+  .build_configurations
+  .each do |configuration|
+    settings =
+      configuration.build_settings
+
+    settings[
+      "PRODUCT_BUNDLE_IDENTIFIER"
+    ] =
+      bundle_identifier
+
+    settings[
+      "PRODUCT_NAME"
+    ] =
+      target_name
+
+    settings[
+      "EXECUTABLE_NAME"
+    ] =
+      "$(PRODUCT_NAME)"
+
+    settings[
+      "WRAPPER_EXTENSION"
+    ] =
+      "appex"
+
+    settings[
+      "INFOPLIST_FILE"
+    ] =
+      "NextSetWidget/Info.plist"
+
+    settings[
+      "SWIFT_VERSION"
+    ] =
+      "5.0"
+
+    settings[
+      "IPHONEOS_DEPLOYMENT_TARGET"
+    ] =
+      deployment_target
+
+    settings[
+      "TARGETED_DEVICE_FAMILY"
+    ] =
+      "1,2"
+
+    settings[
+      "SKIP_INSTALL"
+    ] =
+      "YES"
+
+    settings[
+      "APPLICATION_EXTENSION_API_ONLY"
+    ] =
+      "YES"
+
+    settings[
+      "GENERATE_INFOPLIST_FILE"
+    ] =
+      "NO"
+
+    settings[
+      "MARKETING_VERSION"
+    ] =
+      "1.0"
+
+    settings[
+      "CURRENT_PROJECT_VERSION"
+    ] =
+      "1"
+
+    settings[
+      "CODE_SIGNING_ALLOWED"
+    ] =
+      "NO"
+
+    settings[
+      "CODE_SIGNING_REQUIRED"
+    ] =
+      "NO"
+  end
 
 frameworks = [
   "WidgetKit.framework",
@@ -158,7 +206,9 @@ framework_group =
 frameworks.each do |framework_name|
   reference =
     framework_group.files.find do |file|
-      file.path == framework_name
+      file.path.end_with?(
+        framework_name
+      )
     end
 
   reference ||=
@@ -167,37 +217,55 @@ frameworks.each do |framework_name|
       :sdk_root
     )
 
-  widget_target
-    .frameworks_build_phase
-    .add_file_reference(
-      reference,
-      true
-    )
+  unless widget_target
+           .frameworks_build_phase
+           .files_references
+           .include?(
+             reference
+           )
+    widget_target
+      .frameworks_build_phase
+      .add_file_reference(
+        reference,
+        true
+      )
+  end
 end
 
-runner_target.add_dependency(
-  widget_target
-)
+unless runner_target.dependencies.any? do |dependency|
+         dependency.target ==
+           widget_target
+       end
+  runner_target.add_dependency(
+    widget_target
+  )
+end
 
 embed_phase =
-  runner_target.copy_files_build_phases.find do |phase|
-    phase.name ==
-      "Embed App Extensions"
-  end
+  runner_target
+    .copy_files_build_phases
+    .find do |phase|
+      phase.name ==
+        "Embed App Extensions"
+    end
 
 unless embed_phase
   embed_phase =
-    runner_target.new_copy_files_build_phase(
-      "Embed App Extensions"
-    )
+    runner_target
+      .new_copy_files_build_phase(
+        "Embed App Extensions"
+      )
 
   embed_phase.dst_subfolder_spec =
     "13"
 end
 
-unless embed_phase.files_references.include?(
-  widget_target.product_reference
-)
+unless embed_phase
+         .files_references
+         .include?(
+           widget_target
+             .product_reference
+         )
   build_file =
     embed_phase.add_file_reference(
       widget_target.product_reference,
@@ -214,5 +282,13 @@ end
 project.save
 
 puts(
-  "Created and embedded #{target_name}."
+  "Configured #{target_name}."
+)
+
+puts(
+  "Product: #{widget_target.product_reference.path}"
+)
+
+puts(
+  "Bundle ID: #{bundle_identifier}"
 )
