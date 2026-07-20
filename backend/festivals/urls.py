@@ -95,4 +95,5 @@ path(
         toggle_set_like_view,
         name="toggle-set-like",
     ),
+
 ]

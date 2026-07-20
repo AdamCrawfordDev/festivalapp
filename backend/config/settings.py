@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
     "accounts",
     "festivals",
+    "widgets_api",
 ]
 
 REST_FRAMEWORK = {

@@ -1,3 +1,4 @@
+```yaml
 workflows:
   ios-unsigned:
     name: Festival Companion iOS
@@ -14,6 +15,8 @@ workflows:
 
       vars:
         API_BASE_URL: "http://192.168.178.176:8000/api"
+        WIDGET_API_URL: "http://192.168.178.176:8000/api/widgets/schedule/"
+        WIDGET_API_TOKEN: "DdQ29_jT8RMzzkpe3psAqbUiwx0i6OlA63PeSgCvo6esEiiVU0fGrreXiKL1Lfcr"
 
     cache:
       cache_paths:
@@ -26,10 +29,24 @@ workflows:
         script: |
           flutter --version
           xcodebuild -version
+          ruby --version
+          gem --version
 
       - name: Install Flutter dependencies
         script: |
           flutter pub get
+
+      - name: Configure iOS widget target
+        script: |
+          gem install xcodeproj --no-document
+
+          ruby ios/scripts/add_widget_target.rb
+
+          echo "Available Xcode targets:"
+
+          xcodebuild \
+            -project ios/Runner.xcodeproj \
+            -list
 
       - name: Install CocoaPods dependencies
         script: |
@@ -39,15 +56,36 @@ workflows:
 
       - name: Build unsigned release iOS app
         script: |
+          echo "API_BASE_URL=$API_BASE_URL"
+          echo "WIDGET_API_URL=$WIDGET_API_URL"
+
           flutter build ios \
             --release \
             --no-codesign \
             --dart-define=API_BASE_URL="$API_BASE_URL"
 
+      - name: Verify widget extension
+        script: |
+          echo "Searching for embedded widget extensions:"
+
+          find \
+            build/ios/iphoneos/Runner.app \
+            -maxdepth 4 \
+            -type d \
+            -name "*.appex" \
+            -print
+
+          test -d \
+            build/ios/iphoneos/Runner.app/PlugIns/NextSetWidget.appex
+
+          echo "NextSetWidget.appex was embedded successfully."
+
       - name: Package unsigned release IPA
         script: |
           rm -rf build/ios/ipa_payload
-          mkdir -p build/ios/ipa_payload/Payload
+
+          mkdir -p \
+            build/ios/ipa_payload/Payload
 
           cp -R \
             build/ios/iphoneos/Runner.app \
@@ -62,10 +100,22 @@ workflows:
             build/ios/FestivalCompanion-unsigned.ipa
 
           echo "Created IPA:"
-          ls -lh build/ios/FestivalCompanion-unsigned.ipa
 
-          echo "IPA contents:"
-          unzip -l build/ios/FestivalCompanion-unsigned.ipa | head -30
+          ls -lh \
+            build/ios/FestivalCompanion-unsigned.ipa
+
+          echo "Embedded extensions inside IPA:"
+
+          unzip -l \
+            build/ios/FestivalCompanion-unsigned.ipa |
+            grep -E "PlugIns|NextSetWidget\.appex" ||
+            true
+
+          echo "Initial IPA contents:"
+
+          unzip -l \
+            build/ios/FestivalCompanion-unsigned.ipa |
+            head -40
 
     artifacts:
       - build/ios/FestivalCompanion-unsigned.ipa
