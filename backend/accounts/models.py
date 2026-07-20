@@ -13,3 +13,23 @@ class User(AbstractUser):
         choices=AccountType.choices,
         default=AccountType.USER,
     )
+
+    profile_pic = models.ImageField(
+        upload_to="profile_pic/",
+        blank=True,
+        null=True,
+    )
+
+    profile_picture = models.ImageField(
+        upload_to="profile_pictures/",
+        blank=True,
+        null=True,
+    )
+
+    bio = models.TextField(blank=True)
+
+    display_name = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+

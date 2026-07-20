@@ -1,48 +1,26 @@
-import {motion} from "motion/react"
+import MainText from "./MainText";
+import SubText from "./SubText";
+import DescriptionText from "./DescriptionText";
+import GetStarted from "./GetStarted";
 
-export default function MainText() {
+export default function Hero() {
     return (
-        <div className="mx-auto flex min-h-[80vh] max-w-9xl items-center px-8">
-            <div className="max-w-7xl mx-auto">
-                <h1 className="font-heading text-8xl text-[var(--color-accent)]">
-                    Festival
-                    Planning
-                </h1>
-                <div className="pl-1.25 flex gap-3">
-                    <motion.div
-                        initial={{ opacity: 0, y: -50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                            y: { duration: 0.4 },
-                            opacity: { duration: 0.8 },
-                        }}
-                    >
-                        <p className="text-5xl font-semibold text-[var(--color-secondary)]">
-                            Made
-                        </p>
-                    </motion.div>
+        <section className="min-h-[85vh] flex items-center">
+            <div className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-16 px-8">
 
-                    <motion.div
-                        initial={{ opacity: 0, y: -50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                            y: { duration: 0.6 },
-                            opacity: { duration: 1},
-                        }}
-                    >
-                        <p className="text-5xl font-semibold text-[var(--color-secondary)]">
-                            Easy
-                        </p>
-                    </motion.div>
-
+                <div className="flex flex-col justify-center">
+                    <MainText />
+                    <div className="mt-6 h-1 w-24 rounded-full bg-[var(--color-secondary)]"></div>
+                    <SubText />
+                    <DescriptionText />
+                    <GetStarted />
                 </div>
-                <p className="pl-2 pt-2.5 text-xl font-[var(--font-secondary)]]">
-                    So partiers and organisers can focus on what matters.
-                </p>
 
-
+                <div>
+                    {/* Phone mockup goes here later */}
+                </div>
 
             </div>
-        </div>
+        </section>
     );
 }

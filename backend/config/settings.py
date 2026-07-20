@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-4r8(kx#)3d$z%+d!qbvcjn1xu%h57%*j*u!l=uvekyz2a62z2^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "10.0.2.2",
+]
+
 
 
 # Application definition
@@ -37,10 +42,35 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "corsheaders",
     "rest_framework",
+    "rest_framework.authtoken",
+
     "accounts",
+    "festivals",
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        (
+            "rest_framework.authentication."
+            "SessionAuthentication"
+        ),
+        (
+            "rest_framework.authentication."
+            "TokenAuthentication"
+        ),
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        (
+            "rest_framework.permissions."
+            "IsAuthenticated"
+        ),
+    ],
+}
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -56,6 +86,7 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://10.0.2.2:8000",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
