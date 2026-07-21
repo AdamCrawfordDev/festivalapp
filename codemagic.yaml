@@ -1,3 +1,4 @@
+
 workflows:
   ios-unsigned:
     name: Festival Companion iOS
@@ -59,28 +60,30 @@ workflows:
             --no-codesign \
             --dart-define=API_BASE_URL="$API_BASE_URL"
 
-        - name: Verify widget
+      - name: Verify widget
         script: |
           set -euo pipefail
 
+          PLUGINS_PATH="build/ios/iphoneos/Runner.app/PlugIns"
+
+          echo "===== Embedded widgets ====="
+
+          find \
+            "$PLUGINS_PATH" \
+            -maxdepth 1 \
+            -type d \
+            -name "*.appex" \
+            -print
+
           WIDGET_PATH="$(
             find \
-              build/ios/iphoneos/Runner.app/PlugIns \
+              "$PLUGINS_PATH" \
               -maxdepth 1 \
               -type d \
               -name "*.appex" \
               -print \
               -quit
           )"
-
-          echo "===== Embedded widgets ====="
-
-          find \
-            build/ios/iphoneos/Runner.app/PlugIns \
-            -maxdepth 1 \
-            -type d \
-            -name "*.appex" \
-            -print
 
           if [ -z "$WIDGET_PATH" ]; then
             echo "No widget extension was embedded."
@@ -99,6 +102,17 @@ workflows:
           echo "===== Widget Info.plist ====="
 
           plutil -p "$INFO_PLIST"
+
+          EXTENSION_POINT="$(
+            /usr/libexec/PlistBuddy \
+              -c "Print :NSExtension:NSExtensionPointIdentifier" \
+              "$INFO_PLIST"
+          )"
+
+          if [ "$EXTENSION_POINT" != "com.apple.widgetkit-extension" ]; then
+            echo "Unexpected extension point: $EXTENSION_POINT"
+            exit 1
+          fi
 
           WIDGET_EXECUTABLE="$(
             /usr/libexec/PlistBuddy \
@@ -120,6 +134,8 @@ workflows:
 
       - name: Package unsigned release IPA
         script: |
+          set -euo pipefail
+
           IPA_PATH="build/ios/FestivalCompanion-unsigned.ipa"
           PAYLOAD_ROOT="build/ios/ipa_payload"
           PAYLOAD_PATH="$PAYLOAD_ROOT/Payload"
@@ -149,8 +165,8 @@ workflows:
           echo "===== Widget files inside IPA ====="
 
           unzip -l "$IPA_PATH" |
-            grep \
-              "Payload/Runner.app/PlugIns/NextSetWidget.appex"
+            grep -E \
+              "Payload/Runner\.app/PlugIns/.+\.appex"
 
           echo ""
           echo "===== Initial IPA contents ====="
@@ -161,3 +177,4 @@ workflows:
     artifacts:
       - build/ios/FestivalCompanion-unsigned.ipa
       - build/ios/iphoneos/Runner.app
+
