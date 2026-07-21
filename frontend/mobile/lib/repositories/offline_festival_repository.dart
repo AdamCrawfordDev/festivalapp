@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
 import '../database/app_database.dart';
 import '../database/database_provider.dart';
-import '../services/schedule_widget_service.dart';
+import '../services/widget_reload_service.dart';
 
 class OfflineFestivalRepository {
   OfflineFestivalRepository({
@@ -17,7 +17,8 @@ class OfflineFestivalRepository {
   final Dio _dio;
   final AppDatabase _database;
 
-  Stream<List<CachedFestival>> watchFestivals() {
+  Stream<List<CachedFestival>>
+      watchFestivals() {
     return _database.watchFestivals();
   }
 
@@ -37,7 +38,8 @@ class OfflineFestivalRepository {
     );
   }
 
-  Stream<List<CachedFestivalSet>> watchSets(
+  Stream<List<CachedFestivalSet>>
+      watchSets(
     int festivalId,
   ) {
     return _database.watchFestivalSets(
@@ -48,12 +50,13 @@ class OfflineFestivalRepository {
   /*
    * Refresh the festival discovery list.
    *
-   * This only upserts festival summary rows. It does not
-   * delete cached festivals, stages or schedules that are
-   * absent from the latest discovery response.
+   * This only upserts festival summary rows. It does
+   * not delete cached festivals, stages or schedules
+   * that are absent from the latest discovery response.
    */
   Future<void> syncFestivalList() async {
-    final response = await _dio.get<dynamic>(
+    final response =
+        await _dio.get<dynamic>(
       '/festivals/discover/',
     );
 
@@ -66,7 +69,8 @@ class OfflineFestivalRepository {
       );
     }
 
-    final now = DateTime.now().toUtc();
+    final now =
+        DateTime.now().toUtc();
 
     final festivals = data.map(
       (item) {
@@ -77,18 +81,22 @@ class OfflineFestivalRepository {
           );
         }
 
-        final json = Map<String, dynamic>.from(
+        final json =
+            Map<String, dynamic>.from(
           item,
         );
 
-        return CachedFestivalsCompanion.insert(
+        return CachedFestivalsCompanion
+            .insert(
           id: Value(
             json['id'] as int,
           ),
-          name: json['name'] as String? ??
-              'Unnamed festival',
+          name:
+              json['name'] as String? ??
+                  'Unnamed festival',
           description: Value(
-            json['description'] as String? ??
+            json['description']
+                    as String? ??
                 '',
           ),
           startDate: DateTime.parse(
@@ -101,11 +109,14 @@ class OfflineFestivalRepository {
             json['image'] as String?,
           ),
           organiserName: Value(
-            json['organiser_name'] as String? ??
+            json['organiser_name']
+                    as String? ??
                 '',
           ),
-          organiserProfilePicture: Value(
-            json['organiser_profile_picture']
+          organiserProfilePicture:
+              Value(
+            json[
+                    'organiser_profile_picture']
                 as String?,
           ),
           syncedAt: now,
@@ -115,7 +126,8 @@ class OfflineFestivalRepository {
       growable: false,
     );
 
-    await _database.upsertFestivalSummaries(
+    await _database
+        .upsertFestivalSummaries(
       festivals,
     );
   }
@@ -124,9 +136,11 @@ class OfflineFestivalRepository {
     int festivalId,
   ) async {
     /*
-     * Fetch all public festival resources concurrently.
+     * Fetch all public festival resources
+     * concurrently.
      */
-    final responses = await Future.wait([
+    final responses =
+        await Future.wait([
       _dio.get<dynamic>(
         '/festivals/discover/'
         '$festivalId/',
@@ -181,16 +195,18 @@ class OfflineFestivalRepository {
             pending.desiredIsLiked,
     };
 
-    final now = DateTime.now().toUtc();
+    final now =
+        DateTime.now().toUtc();
 
     final festival =
         CachedFestivalsCompanion.insert(
       id: Value(
         festivalJson['id'] as int,
       ),
-      name: festivalJson['name']
-              as String? ??
-          'Festival',
+      name:
+          festivalJson['name']
+                  as String? ??
+              'Festival',
       description: Value(
         festivalJson['description']
                 as String? ??
@@ -205,7 +221,8 @@ class OfflineFestivalRepository {
             as String,
       ).toUtc(),
       image: Value(
-        festivalJson['image'] as String?,
+        festivalJson['image']
+            as String?,
       ),
       organiserName: Value(
         festivalJson['organiser_name']
@@ -222,25 +239,29 @@ class OfflineFestivalRepository {
 
     final stages = stagesJson.map(
       (json) {
-        return CachedStagesCompanion.insert(
+        return CachedStagesCompanion
+            .insert(
           id: Value(
             json['id'] as int,
           ),
           festivalId:
               json['festival'] as int,
-          name: json['name'] as String? ??
-              'Stage',
+          name:
+              json['name'] as String? ??
+                  'Stage',
         );
       },
     ).toList(
       growable: false,
     );
 
-    final serverLikeState = <int, bool>{};
+    final serverLikeState =
+        <int, bool>{};
 
     final sets = setsJson.map(
       (json) {
-        final setId = json['id'] as int;
+        final setId =
+            json['id'] as int;
 
         final serverIsLiked =
             json['is_liked'] as bool? ??
@@ -250,8 +271,9 @@ class OfflineFestivalRepository {
             serverIsLiked;
 
         /*
-         * Pending local intent always wins over stale server
-         * state while a mutation is waiting to reconcile.
+         * Pending local intent always wins over
+         * stale server state while a mutation is
+         * waiting to reconcile.
          */
         final localIsLiked =
             pendingBySetId[setId] ??
@@ -264,9 +286,11 @@ class OfflineFestivalRepository {
           ),
           festivalId:
               json['festival'] as int,
-          stageId: json['stage'] as int,
+          stageId:
+              json['stage'] as int,
           stageName:
-              json['stage_name'] as String? ??
+              json['stage_name']
+                      as String? ??
                   'Stage',
           artistId:
               json['artist'] as int,
@@ -302,11 +326,12 @@ class OfflineFestivalRepository {
     );
 
     /*
-     * Replace the complete cached festival in one transaction.
+     * Replace the complete cached festival in one
+     * transaction.
      *
-     * Pending desired states have already been overlaid, so
-     * locally queued likes do not flicker back to stale server
-     * values during synchronisation.
+     * Pending desired states have already been
+     * overlaid, so locally queued likes do not
+     * flicker back to stale server values.
      */
     await _database.replaceFestival(
       festival: festival,
@@ -315,21 +340,22 @@ class OfflineFestivalRepository {
     );
 
     /*
-     * Reconcile queued likes against Django after the refreshed
-     * data has been written to SQLite.
+     * Reconcile queued likes against Django after
+     * writing the refreshed data to SQLite.
+     *
+     * WidgetKit is reloaded once afterward when at
+     * least one mutation was successfully confirmed.
      */
-    await _flushPendingLikes(
+    final didConfirmLikes =
+        await _flushPendingLikes(
       festivalId: festivalId,
-      serverLikeState: serverLikeState,
+      serverLikeState:
+          serverLikeState,
     );
 
-    /*
-     * HomeWidget is a secondary presentation surface.
-     *
-     * A widget-platform failure must not make the primary SQLite
-     * synchronisation fail.
-     */
-    await _updateWidgetSilently();
+    if (didConfirmLikes) {
+      await _reloadWidgetSilently();
+    }
   }
 
   Future<void> setLike({
@@ -338,14 +364,10 @@ class OfflineFestivalRepository {
     required bool desiredIsLiked,
   }) async {
     /*
-     * SQLite is the source of truth.
+     * SQLite is the app's local source of truth.
      *
-     * This transaction updates the cached set and records the
-     * desired final state in PendingSetLikes.
-     *
-     * If this operation succeeds, the local like operation has
-     * succeeded. Later widget or network failures must not cause
-     * the UI to roll it back.
+     * This writes the optimistic state and records
+     * the desired final server state.
      */
     await _database.setLocalLike(
       setId: setId,
@@ -354,52 +376,64 @@ class OfflineFestivalRepository {
     );
 
     /*
-     * Updating HomeWidget is best-effort.
-     *
-     * HomeWidget may throw because of platform configuration,
-     * an unavailable widget provider, app-group configuration or
-     * another native integration issue.
-     *
-     * None of those conditions means the SQLite like failed.
-     */
-    await _updateWidgetSilently();
-
-    /*
      * Try to reconcile immediately.
      *
-     * A network failure is expected while offline. The pending
-     * SQLite row remains queued for a later sync.
+     * Do not reload the API-backed widget before
+     * this succeeds. While offline, Django still
+     * contains the previous state and the widget
+     * would fetch stale information.
      */
     try {
-      await _flushOnePendingLike(
+      final didConfirm =
+          await _flushOnePendingLike(
         setId,
+        reloadWidget: false,
       );
+
+      if (didConfirm) {
+        await _reloadWidgetSilently();
+      }
     } catch (_) {
-      // Leave the desired state queued.
+      /*
+       * Leave the desired state queued.
+       *
+       * A later festival sync, app launch or
+       * connectivity retry can reconcile it.
+       */
     }
   }
 
-  Future<void> flushAllPendingLikes() async {
+  Future<void>
+      flushAllPendingLikes() async {
     final pending =
         await _database.getPendingLikes();
 
+    var didConfirmAny = false;
+
     for (final item in pending) {
       try {
-        await _flushOnePendingLike(
+        final didConfirm =
+            await _flushOnePendingLike(
           item.setId,
+          reloadWidget: false,
         );
+
+        if (didConfirm) {
+          didConfirmAny = true;
+        }
       } catch (_) {
         /*
-         * Keep the item queued. A future app launch, refresh or
-         * connectivity retry can reconcile it.
+         * Keep this item queued for a later retry.
          */
       }
     }
 
-    await _updateWidgetSilently();
+    if (didConfirmAny) {
+      await _reloadWidgetSilently();
+    }
   }
 
-  Future<void> _flushPendingLikes({
+  Future<bool> _flushPendingLikes({
     required int festivalId,
     required Map<int, bool>
         serverLikeState,
@@ -408,6 +442,8 @@ class OfflineFestivalRepository {
         await _database.getPendingLikes(
       festivalId: festivalId,
     );
+
+    var didConfirmAny = false;
 
     for (final item in pending) {
       final serverState =
@@ -420,16 +456,19 @@ class OfflineFestivalRepository {
       if (serverState ==
           item.desiredIsLiked) {
         final localSets =
-            await _database.getFestivalSets(
+            await _database
+                .getFestivalSets(
           festivalId,
         );
 
         var localLikeCount = 0;
 
-        for (final set in localSets) {
-          if (set.id == item.setId) {
+        for (final festivalSet
+            in localSets) {
+          if (festivalSet.id ==
+              item.setId) {
             localLikeCount =
-                set.likeCount;
+                festivalSet.likeCount;
             break;
           }
         }
@@ -438,9 +477,11 @@ class OfflineFestivalRepository {
           setId: item.setId,
           isLiked:
               item.desiredIsLiked,
-          likeCount: localLikeCount,
+          likeCount:
+              localLikeCount,
         );
 
+        didConfirmAny = true;
         continue;
       }
 
@@ -451,9 +492,19 @@ class OfflineFestivalRepository {
           '${item.setId}/like/',
         );
 
+        final responseData =
+            response.data;
+
+        if (responseData is! Map) {
+          throw const FormatException(
+            'Expected like endpoint to '
+            'return an object.',
+          );
+        }
+
         final json =
             Map<String, dynamic>.from(
-          response.data as Map,
+          responseData,
         );
 
         await _database.confirmLike(
@@ -463,30 +514,37 @@ class OfflineFestivalRepository {
           likeCount:
               json['like_count'] as int,
         );
+
+        didConfirmAny = true;
       } catch (_) {
-        // Keep the desired state queued.
+        /*
+         * Keep the desired state queued.
+         */
       }
     }
+
+    return didConfirmAny;
   }
 
-  Future<void> _flushOnePendingLike(
-    int setId,
-  ) async {
+  Future<bool> _flushOnePendingLike(
+    int setId, {
+    bool reloadWidget = true,
+  }) async {
     final pending =
         await _database.getPendingLike(
       setId,
     );
 
     if (pending == null) {
-      return;
+      return false;
     }
 
     /*
-     * Django currently exposes a toggle endpoint rather than an
-     * idempotent "set like state" endpoint.
+     * Django currently exposes a toggle endpoint
+     * rather than an idempotent set-state endpoint.
      *
-     * Fetch the current server state first and only toggle when
-     * it differs from the locally desired state.
+     * Fetch the current server state first and only
+     * toggle when it differs from the desired state.
      */
     final response =
         await _dio.get<dynamic>(
@@ -523,10 +581,10 @@ class OfflineFestivalRepository {
 
     if (serverSet == null) {
       /*
-       * Keep the mutation queued if the set is temporarily absent
-       * from the public response.
+       * Keep the mutation queued if the set is
+       * temporarily absent from the response.
        */
-      return;
+      return false;
     }
 
     final serverIsLiked =
@@ -544,7 +602,11 @@ class OfflineFestivalRepository {
                 0,
       );
 
-      return;
+      if (reloadWidget) {
+        await _reloadWidgetSilently();
+      }
+
+      return true;
     }
 
     final toggleResponse =
@@ -575,28 +637,32 @@ class OfflineFestivalRepository {
       likeCount:
           toggleJson['like_count'] as int,
     );
+
+    if (reloadWidget) {
+      await _reloadWidgetSilently();
+    }
+
+    return true;
   }
 
   /*
-   * Updating the platform widget must never determine whether an
-   * offline database operation succeeded.
+   * Ask WidgetKit to request a fresh timeline.
    *
-   * The app schedule remains authoritative and functional even
-   * when the native widget cannot currently be updated.
+   * The widget fetches its data directly from Django,
+   * so writing the schedule into shared widget storage
+   * is no longer part of this architecture.
+   *
+   * Widget refresh failure must never make an app
+   * database or network operation fail.
    */
-  Future<void> _updateWidgetSilently() async {
+  Future<void>
+      _reloadWidgetSilently() async {
     try {
-      await ScheduleWidgetService
-          .updateFromDatabase(
-        _database,
-      );
+      await WidgetReloadService
+          .reloadScheduleWidget();
     } catch (_) {
       /*
-       * Ignore widget integration failures.
-       *
-       * A later successful update, app launch or reconciliation
-       * will refresh the widget from the authoritative SQLite
-       * state.
+       * WidgetKit reload requests are best-effort.
        */
     }
   }
@@ -604,7 +670,12 @@ class OfflineFestivalRepository {
   Future<void> clearAll() async {
     await _database.clearAllCachedData();
 
-    await _updateWidgetSilently();
+    /*
+     * The Django-backed widget may still contain a
+     * previously generated timeline. Ask WidgetKit to
+     * request current server data.
+     */
+    await _reloadWidgetSilently();
   }
 }
 

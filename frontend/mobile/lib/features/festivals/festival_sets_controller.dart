@@ -12,22 +12,23 @@ class FestivalSetsController
 
   final int festivalId;
 
-  final Set<int> _pendingSetIds = <int>{};
+  final Set<int> _pendingSetIds =
+      <int>{};
 
   @override
-  Future<List<FestivalSet>> build() async {
-    final provider = offlineFestivalProvider(
+  Future<List<FestivalSet>>
+      build() async {
+    final provider =
+        offlineFestivalProvider(
       festivalId,
     );
 
     /*
-     * Listen to future SQLite-backed updates without watching
-     * provider.future from this asynchronous build method.
+     * Keep this controller synchronised with the
+     * SQLite-backed festival provider.
      *
-     * The listener's types are deliberately inferred from
-     * `provider`. This avoids coupling this controller to the
-     * generated Drift row types or requiring an explicit
-     * OfflineFestivalBundle type annotation.
+     * Cached data remains visible while network
+     * synchronisation happens in the background.
      */
     ref.listen(
       provider,
@@ -39,10 +40,11 @@ class FestivalSetsController
 
         if (data == null) {
           /*
-           * Ignore loading and error emissions after cached data
-           * has already been displayed.
+           * Ignore loading and error emissions after
+           * cached schedule data has been displayed.
            *
-           * The current schedule remains visible and mounted.
+           * This prevents the schedule from disappearing
+           * during a background refresh.
            */
           return;
         }
@@ -61,12 +63,14 @@ class FestivalSetsController
     );
 
     /*
-     * Read the initial offline bundle once.
+     * Read the initial cached bundle once.
      *
-     * Later Drift emissions are handled by the listener above,
-     * without rebuilding this asynchronous controller.
+     * Future Drift changes are handled by the listener
+     * above without rebuilding this asynchronous
+     * controller.
      */
-    final initialBundle = await ref.read(
+    final initialBundle =
+        await ref.read(
       provider.future,
     );
 
@@ -87,8 +91,8 @@ class FestivalSetsController
 
   Future<void> refresh() async {
     /*
-     * Keep the cached schedule visible while the repository
-     * attempts to refresh it from Django.
+     * Keep the cached schedule mounted while the
+     * repository refreshes festival data from Django.
      */
     await ref
         .read(
@@ -106,15 +110,18 @@ class FestivalSetsController
       return;
     }
 
-    final currentSets = state.asData?.value;
+    final currentSets =
+        state.asData?.value;
 
     if (currentSets == null) {
       return;
     }
 
-    final setIndex = currentSets.indexWhere(
+    final setIndex =
+        currentSets.indexWhere(
       (festivalSet) {
-        return festivalSet.id == setId;
+        return festivalSet.id ==
+            setId;
       },
     );
 
@@ -122,26 +129,29 @@ class FestivalSetsController
       return;
     }
 
-    final originalSet = currentSets[setIndex];
+    final originalSet =
+        currentSets[setIndex];
 
-    final nextIsLiked = !originalSet.isLiked;
+    final nextIsLiked =
+        !originalSet.isLiked;
 
-    final nextLikeCount = nextIsLiked
-        ? originalSet.likeCount + 1
-        : originalSet.likeCount > 0
-            ? originalSet.likeCount - 1
-            : 0;
+    final nextLikeCount =
+        nextIsLiked
+            ? originalSet.likeCount + 1
+            : originalSet.likeCount > 0
+                ? originalSet.likeCount - 1
+                : 0;
 
     _pendingSetIds.add(
       setId,
     );
 
     /*
-     * Apply the optimistic change immediately.
+     * Apply the optimistic state immediately.
      *
-     * The provider remains AsyncData throughout the operation,
-     * preventing FestivalScreen from replacing the schedule with
-     * its loading sliver.
+     * The controller remains AsyncData throughout the
+     * operation, preventing the schedule screen from
+     * being replaced by a loading state.
      */
     final optimisticSets =
         List<FestivalSet>.from(
@@ -162,15 +172,21 @@ class FestivalSetsController
 
     try {
       /*
-       * OfflineFestivalController delegates this operation to the
+       * OfflineFestivalController delegates to the
        * offline repository.
        *
-       * The repository writes to SQLite first, updates the home
-       * widget, queues the desired mutation and attempts to
-       * reconcile it with Django.
+       * The repository:
        *
-       * Network failures leave the operation queued and do not
-       * cause an optimistic rollback.
+       * 1. writes the desired state to SQLite;
+       * 2. stores a pending server mutation;
+       * 3. attempts to reconcile the desired state
+       *    with Django;
+       * 4. asks WidgetKit to reload the schedule
+       *    widget after Django confirms the state.
+       *
+       * A normal network failure leaves the mutation
+       * queued and does not cause this optimistic
+       * change to roll back.
        */
       await ref
           .read(
@@ -187,19 +203,22 @@ class FestivalSetsController
       stackTrace
     ) {
       /*
-       * This rollback is only for a local failure, such as the
-       * SQLite write failing.
+       * This catch block represents a genuine local
+       * failure, such as SQLite failing to persist the
+       * desired state.
        *
-       * Normal offline network failures are handled internally by
-       * the repository and do not reach this block.
+       * Normal offline network failures are handled
+       * by the repository and do not reach here.
        */
-      final latestSets = state.asData?.value;
+      final latestSets =
+          state.asData?.value;
 
       if (latestSets != null) {
         final rollbackIndex =
             latestSets.indexWhere(
           (festivalSet) {
-            return festivalSet.id == setId;
+            return festivalSet.id ==
+                setId;
           },
         );
 
@@ -242,7 +261,10 @@ final festivalSetsProvider =
 );
 
 final likedFestivalSetsProvider =
-    Provider.family<List<FestivalSet>, int>(
+    Provider.family<
+      List<FestivalSet>,
+      int
+    >(
   (
     ref,
     festivalId,
@@ -253,7 +275,8 @@ final likedFestivalSetsProvider =
       ),
     );
 
-    final items = sets.asData?.value;
+    final items =
+        sets.asData?.value;
 
     if (items == null) {
       return const <FestivalSet>[];
