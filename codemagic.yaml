@@ -40,6 +40,14 @@ workflows:
           pod install
           cd ..
 
+      - name: Show Xcode targets
+        script: |
+          echo "===== Xcode targets ====="
+
+          xcodebuild \
+            -workspace ios/Runner.xcworkspace \
+            -list
+
       - name: Build unsigned release iOS app
         script: |
           echo "Building Flutter app"
@@ -52,31 +60,57 @@ workflows:
             --dart-define=API_BASE_URL="$API_BASE_URL"
 
       - name: Verify widget
-          script: |
-            echo "===== Embedded widgets ====="
+        script: |
+          WIDGET_PATH="build/ios/iphoneos/Runner.app/PlugIns/NextSetWidget.appex"
 
-            find \
-              build/ios/iphoneos/Runner.app \
-              -name "*.appex"
+          echo "===== Embedded widgets ====="
 
-            echo ""
+          find \
+            build/ios/iphoneos/Runner.app \
+            -type d \
+            -name "*.appex" \
+            -print
 
-            plutil -p \
-              build/ios/iphoneos/Runner.app/PlugIns/NextSetWidget.appex/Info.plist
+          echo ""
+          echo "===== Checking expected widget ====="
+
+          test -d "$WIDGET_PATH"
+          test -f "$WIDGET_PATH/Info.plist"
+
+          echo ""
+          echo "===== Widget Info.plist ====="
+
+          plutil -p \
+            "$WIDGET_PATH/Info.plist"
+
+          echo ""
+          echo "===== Widget executable ====="
+
+          WIDGET_EXECUTABLE="$(
+            /usr/libexec/PlistBuddy \
+              -c "Print :CFBundleExecutable" \
+              "$WIDGET_PATH/Info.plist"
+          )"
+
+          test -n "$WIDGET_EXECUTABLE"
+          test -f "$WIDGET_PATH/$WIDGET_EXECUTABLE"
+
+          file \
+            "$WIDGET_PATH/$WIDGET_EXECUTABLE"
+
+          echo ""
+          echo "Widget extension was built and embedded successfully."
 
       - name: Package unsigned release IPA
         script: |
           IPA_PATH="build/ios/FestivalCompanion-unsigned.ipa"
-          PAYLOAD_PATH="build/ios/ipa_payload/Payload"
+          PAYLOAD_ROOT="build/ios/ipa_payload"
+          PAYLOAD_PATH="$PAYLOAD_ROOT/Payload"
 
-          rm -rf \
-            build/ios/ipa_payload
+          rm -rf "$PAYLOAD_ROOT"
+          rm -f "$IPA_PATH"
 
-          rm -f \
-            "$IPA_PATH"
-
-          mkdir -p \
-            "$PAYLOAD_PATH"
+          mkdir -p "$PAYLOAD_PATH"
 
           cp -R \
             build/ios/iphoneos/Runner.app \
@@ -92,16 +126,14 @@ workflows:
 
           echo "===== Created IPA ====="
 
-          ls -lh \
-            "$IPA_PATH"
+          ls -lh "$IPA_PATH"
 
           echo ""
-          echo "===== Embedded extensions inside IPA ====="
+          echo "===== Widget files inside IPA ====="
 
           unzip -l "$IPA_PATH" |
-            grep -E \
-              "Payload/Runner\.app/PlugIns/NextSetWidget\.appex" ||
-            true
+            grep \
+              "Payload/Runner.app/PlugIns/NextSetWidget.appex"
 
           echo ""
           echo "===== Initial IPA contents ====="
