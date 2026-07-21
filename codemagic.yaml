@@ -34,18 +34,6 @@ workflows:
         script: |
           flutter pub get
 
-      - name: Configure iOS widget target
-        script: |
-          gem install xcodeproj --no-document
-
-          ruby ios/scripts/add_widget_target.rb
-
-          echo "===== Available Xcode targets ====="
-
-          xcodebuild \
-            -project ios/Runner.xcodeproj \
-            -list
-
       - name: Install CocoaPods dependencies
         script: |
           cd ios
@@ -63,61 +51,18 @@ workflows:
             --no-codesign \
             --dart-define=API_BASE_URL="$API_BASE_URL"
 
-      - name: Inspect widget extension
-        script: |
-          WIDGET_PATH="build/ios/iphoneos/Runner.app/PlugIns/NextSetWidget.appex"
+      - name: Verify widget
+          script: |
+            echo "===== Embedded widgets ====="
 
-          echo "===== Widget files ====="
+            find \
+              build/ios/iphoneos/Runner.app \
+              -name "*.appex"
 
-          find "$WIDGET_PATH" \
-            -maxdepth 2 \
-            -print
+            echo ""
 
-          echo ""
-          echo "===== Widget Info.plist ====="
-
-          plutil -p \
-            "$WIDGET_PATH/Info.plist"
-
-          echo ""
-          echo "===== Widget executable ====="
-
-          file \
-            "$WIDGET_PATH/NextSetWidget"
-
-          echo ""
-          echo "===== Widget executable architectures ====="
-
-          lipo \
-            -info \
-            "$WIDGET_PATH/NextSetWidget"
-
-          echo ""
-          echo "===== App plug-ins ====="
-
-          find \
-            build/ios/iphoneos/Runner.app/PlugIns \
-            -maxdepth 2 \
-            -print
-
-      - name: Verify widget extension
-        script: |
-          WIDGET_PATH="build/ios/iphoneos/Runner.app/PlugIns/NextSetWidget.appex"
-
-          echo "===== Embedded widget extensions ====="
-
-          find \
-            build/ios/iphoneos/Runner.app \
-            -maxdepth 4 \
-            -type d \
-            -name "*.appex" \
-            -print
-
-          test -d "$WIDGET_PATH"
-          test -f "$WIDGET_PATH/Info.plist"
-          test -f "$WIDGET_PATH/NextSetWidget"
-
-          echo "NextSetWidget.appex was embedded successfully."
+            plutil -p \
+              build/ios/iphoneos/Runner.app/PlugIns/NextSetWidget.appex/Info.plist
 
       - name: Package unsigned release IPA
         script: |
