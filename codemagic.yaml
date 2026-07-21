@@ -59,44 +59,61 @@ workflows:
             --no-codesign \
             --dart-define=API_BASE_URL="$API_BASE_URL"
 
-      - name: Verify widget
+        - name: Verify widget
         script: |
-          WIDGET_PATH="build/ios/iphoneos/Runner.app/PlugIns/NextSetWidget.appex"
+          set -euo pipefail
+
+          WIDGET_PATH="$(
+            find \
+              build/ios/iphoneos/Runner.app/PlugIns \
+              -maxdepth 1 \
+              -type d \
+              -name "*.appex" \
+              -print \
+              -quit
+          )"
 
           echo "===== Embedded widgets ====="
 
           find \
-            build/ios/iphoneos/Runner.app \
+            build/ios/iphoneos/Runner.app/PlugIns \
+            -maxdepth 1 \
             -type d \
             -name "*.appex" \
             -print
 
-          echo ""
-          echo "===== Checking expected widget ====="
+          if [ -z "$WIDGET_PATH" ]; then
+            echo "No widget extension was embedded."
+            exit 1
+          fi
 
-          test -d "$WIDGET_PATH"
-          test -f "$WIDGET_PATH/Info.plist"
+          echo ""
+          echo "===== Widget path ====="
+          echo "$WIDGET_PATH"
+
+          INFO_PLIST="$WIDGET_PATH/Info.plist"
+
+          test -f "$INFO_PLIST"
 
           echo ""
           echo "===== Widget Info.plist ====="
 
-          plutil -p \
-            "$WIDGET_PATH/Info.plist"
-
-          echo ""
-          echo "===== Widget executable ====="
+          plutil -p "$INFO_PLIST"
 
           WIDGET_EXECUTABLE="$(
             /usr/libexec/PlistBuddy \
               -c "Print :CFBundleExecutable" \
-              "$WIDGET_PATH/Info.plist"
+              "$INFO_PLIST"
           )"
+
+          echo ""
+          echo "===== Widget executable ====="
+          echo "$WIDGET_EXECUTABLE"
 
           test -n "$WIDGET_EXECUTABLE"
           test -f "$WIDGET_PATH/$WIDGET_EXECUTABLE"
 
-          file \
-            "$WIDGET_PATH/$WIDGET_EXECUTABLE"
+          file "$WIDGET_PATH/$WIDGET_EXECUTABLE"
 
           echo ""
           echo "Widget extension was built and embedded successfully."
