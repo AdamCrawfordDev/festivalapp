@@ -1,15 +1,9 @@
-//
-//  NextSetWidgetBundle.swift
-//  NextSetWidget
-//
-//  Created by builder on 7/21/26.
-//
-
-import WidgetKit
 import SwiftUI
+import WidgetKit
 
 @main
-struct NextSetWidgetBundle: WidgetBundle {
+struct NextSetWidgetBundle:
+    WidgetBundle {
     var body: some Widget {
         NextSetWidget()
     }

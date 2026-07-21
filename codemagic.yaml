@@ -1,4 +1,3 @@
-
 workflows:
   ios-unsigned:
     name: Festival Companion iOS
@@ -28,12 +27,43 @@ workflows:
         script: |
           flutter --version
           xcodebuild -version
-          ruby --version
-          gem --version
 
       - name: Install Flutter dependencies
         script: |
           flutter pub get
+
+      - name: Generate widget build configuration
+        script: |
+          set -euo pipefail
+
+          if [ -z "$WIDGET_API_URL" ]; then
+            echo "WIDGET_API_URL is missing."
+            exit 1
+          fi
+
+          if [ -z "$WIDGET_API_TOKEN" ]; then
+            echo "WIDGET_API_TOKEN is missing."
+            exit 1
+          fi
+
+          cat > ios/NextSetWidget/WidgetBuildConfig.swift <<EOF
+          import Foundation
+
+          enum WidgetBuildConfig {
+              static let apiURL =
+                  "$WIDGET_API_URL"
+
+              static let apiToken =
+                  "$WIDGET_API_TOKEN"
+          }
+          EOF
+
+          echo "Generated WidgetBuildConfig.swift"
+
+          sed \
+            's/static let apiToken.*/static let apiToken = "[REDACTED]"/' \
+            ios/NextSetWidget/WidgetBuildConfig.swift ||
+            true
 
       - name: Install CocoaPods dependencies
         script: |
@@ -43,37 +73,22 @@ workflows:
 
       - name: Show Xcode targets
         script: |
-          echo "===== Xcode targets ====="
-
           xcodebuild \
             -workspace ios/Runner.xcworkspace \
             -list
 
       - name: Build unsigned release iOS app
         script: |
-          echo "Building Flutter app"
-          echo "API_BASE_URL=$API_BASE_URL"
-          echo "WIDGET_API_URL=$WIDGET_API_URL"
-
           flutter build ios \
             --release \
             --no-codesign \
             --dart-define=API_BASE_URL="$API_BASE_URL"
 
-      - name: Verify widget
+      - name: Verify widget extension
         script: |
           set -euo pipefail
 
           PLUGINS_PATH="build/ios/iphoneos/Runner.app/PlugIns"
-
-          echo "===== Embedded widgets ====="
-
-          find \
-            "$PLUGINS_PATH" \
-            -maxdepth 1 \
-            -type d \
-            -name "*.appex" \
-            -print
 
           WIDGET_PATH="$(
             find \
@@ -90,29 +105,29 @@ workflows:
             exit 1
           fi
 
-          echo ""
-          echo "===== Widget path ====="
-          echo "$WIDGET_PATH"
-
           INFO_PLIST="$WIDGET_PATH/Info.plist"
 
           test -f "$INFO_PLIST"
+
+          echo "===== Widget path ====="
+          echo "$WIDGET_PATH"
 
           echo ""
           echo "===== Widget Info.plist ====="
 
           plutil -p "$INFO_PLIST"
 
+          MINIMUM_OS="$(
+            /usr/libexec/PlistBuddy \
+              -c "Print :MinimumOSVersion" \
+              "$INFO_PLIST"
+          )"
+
           EXTENSION_POINT="$(
             /usr/libexec/PlistBuddy \
               -c "Print :NSExtension:NSExtensionPointIdentifier" \
               "$INFO_PLIST"
           )"
-
-          if [ "$EXTENSION_POINT" != "com.apple.widgetkit-extension" ]; then
-            echo "Unexpected extension point: $EXTENSION_POINT"
-            exit 1
-          fi
 
           WIDGET_EXECUTABLE="$(
             /usr/libexec/PlistBuddy \
@@ -121,16 +136,22 @@ workflows:
           )"
 
           echo ""
-          echo "===== Widget executable ====="
-          echo "$WIDGET_EXECUTABLE"
+          echo "Minimum OS: $MINIMUM_OS"
+          echo "Extension point: $EXTENSION_POINT"
+          echo "Executable: $WIDGET_EXECUTABLE"
 
-          test -n "$WIDGET_EXECUTABLE"
-          test -f "$WIDGET_PATH/$WIDGET_EXECUTABLE"
+          test \
+            "$EXTENSION_POINT" = \
+            "com.apple.widgetkit-extension"
 
-          file "$WIDGET_PATH/$WIDGET_EXECUTABLE"
+          test -f \
+            "$WIDGET_PATH/$WIDGET_EXECUTABLE"
+
+          file \
+            "$WIDGET_PATH/$WIDGET_EXECUTABLE"
 
           echo ""
-          echo "Widget extension was built and embedded successfully."
+          echo "Widget built and embedded successfully."
 
       - name: Package unsigned release IPA
         script: |
@@ -162,19 +183,12 @@ workflows:
           ls -lh "$IPA_PATH"
 
           echo ""
-          echo "===== Widget files inside IPA ====="
+          echo "===== Embedded extensions ====="
 
           unzip -l "$IPA_PATH" |
             grep -E \
               "Payload/Runner\.app/PlugIns/.+\.appex"
 
-          echo ""
-          echo "===== Initial IPA contents ====="
-
-          unzip -l "$IPA_PATH" |
-            head -50
-
     artifacts:
       - build/ios/FestivalCompanion-unsigned.ipa
       - build/ios/iphoneos/Runner.app
-
