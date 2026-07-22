@@ -4,11 +4,18 @@ import type {
     ScheduleView,
 } from "./scheduleTypes";
 
-export function formatTime(dateString: string) {
-    return new Date(dateString).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
+export function formatTime(
+    value: string,
+): string {
+    return new Intl.DateTimeFormat(
+        "en-GB",
+        {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+            timeZone: "Europe/Zagreb",
+        },
+    ).format(new Date(value));
 }
 
 export function getDayKey(dateString: string) {
@@ -21,14 +28,22 @@ export function getDayKey(dateString: string) {
     ].join("-");
 }
 
-export function formatDayKey(dayKey: string) {
-    return new Date(
+export function formatDayKey(
+    dayKey: string,
+): string {
+    const date = new Date(
         `${dayKey}T12:00:00`,
-    ).toLocaleDateString([], {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-    });
+    );
+
+    return new Intl.DateTimeFormat(
+        "en-GB",
+        {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            timeZone: "Europe/Zagreb",
+        },
+    ).format(date);
 }
 
 export function sortSetsByTime(

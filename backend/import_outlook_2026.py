@@ -98,7 +98,7 @@ SETS = [
 
     ("2026-07-24", "Beach", "13:00", "15:00", "Lioness Power"),
     ("2026-07-24", "Beach", "15:00", "16:00", "Breaka ft. Sgt Pokes (Live)"),
-    ("2026-07-24", "Beach", "16:00", "17:30", "Dr. Obi Meets Anja G, Sistah Tena & Roo D"),
+    ("2026-07-24", "Beach", "16:00", "17:30", "Dr. Obi Meets Anja G, Sistah Tena & Roo T"),
     ("2026-07-24", "Beach", "17:30", "19:00", "Channel One ft. Ras Sherby"),
     ("2026-07-24", "Beach", "19:00", "20:30", "Iration Steppas ft. Dego Ranking"),
     ("2026-07-24", "Beach", "20:30", "22:00", "Om Unit"),
@@ -132,7 +132,7 @@ SETS = [
     ("2026-07-24", "The Source", "21:00", "22:00", "Ynez"),
     ("2026-07-24", "The Source", "22:00", "23:00", "Marysia Osu (Live Harp)"),
     ("2026-07-24", "The Source", "23:00", "00:00", "Kibir La Amlak"),
-    ("2026-07-24", "The Source", "00:00", "01:30", "Sharari (Ambient Meditation)"),
+    ("2026-07-24", "The Source", "00:00", "01:00", "Sharari (Ambient Meditation)"),
     ("2026-07-24", "The Source", "01:00", "03:00", "Formella Presents Moss System"),
 
     ("2026-07-24", "Barbarella's", "00:00", "02:00", "Ikonika"),
@@ -147,7 +147,7 @@ SETS = [
     # Saturday 25 July
     ("2026-07-25", "Yard", "19:00", "20:00", "Shy One ft. Chunky"),
     ("2026-07-25", "Yard", "20:00", "21:00", "SLM: Asian Brat & Hendy ft. Jolie P, Cola B & Jayahadadream"),
-    ("2026-07-25", "Yard", "21:00", "22:00", "Scratchclart & Menzi Present Room vs Grime ft. Tona Delazy, Logan & Jamz"),
+    ("2026-07-25", "Yard", "21:00", "22:00", "Scratchclart & Menzi Present Gqom vs Grime ft. Tona Delazy, Logan & Jammz"),
     ("2026-07-25", "Yard", "22:00", "22:30", "Ralph"),
     ("2026-07-25", "Yard", "22:30", "00:00", "Skee Mask (Grime Set) ft. Logan & Jamz"),
     ("2026-07-25", "Yard", "00:00", "01:00", "Roll Deep"),
@@ -211,7 +211,7 @@ SETS = [
     # Sunday 26 July
     ("2026-07-26", "Yard", "19:00", "20:00", "Thys"),
     ("2026-07-26", "Yard", "20:00", "21:00", "Nectax & Melba"),
-    ("2026-07-26", "Yard", "21:00", "23:00", "Louisett, Hughesee & Dwarde"),
+    ("2026-07-26", "Yard", "21:00", "23:00", "Louise+1, Hughesee & Dwarde"),
     ("2026-07-26", "Yard", "23:00", "00:00", "Samurai Breaks ft. Che3kz"),
     ("2026-07-26", "Yard", "00:00", "01:00", "Cheetah"),
     ("2026-07-26", "Yard", "01:00", "02:00", "SLM: Betsy Mae & Selectatec ft. Jolie P & Jayahadadream"),
@@ -263,7 +263,7 @@ SETS = [
     ("2026-07-26", "Barbarella's", "00:00", "01:30", "Lioness Power, Sinai (DJ), Dubrunner & Breakfake"),
     ("2026-07-26", "Barbarella's", "01:30", "03:00", "Bakey"),
     ("2026-07-26", "Barbarella's", "03:00", "04:30", "Ben UFO"),
-    ("2026-07-26", "Barbarella's", "04:30", "06:00", "Nikana & Yungfya ft. Blackeye MC"),
+    ("2026-07-26", "Barbarella's", "04:30", "06:00", "Niknak & Yungfya ft. Blackeye MC"),
 
     # Monday 27 July
     ("2026-07-27", "Yard", "19:00", "20:30", "Jaz Imsky"),

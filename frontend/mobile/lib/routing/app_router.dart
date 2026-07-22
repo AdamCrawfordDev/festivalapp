@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../features/auth/auth_controller.dart';
 import '../screens/festival_list_screen.dart';
 import '../screens/festival_screen.dart';
 import '../screens/my_schedule_screen.dart';
@@ -98,8 +102,10 @@ final GoRouter appRouter = GoRouter(
   ],
 );
 
+
+
 class AppScaffold
-    extends StatelessWidget {
+    extends ConsumerWidget {
   const AppScaffold({
     required this.navigationShell,
     super.key,
@@ -109,8 +115,66 @@ class AppScaffold
       navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(
+              Icons.account_circle_outlined,
+            ),
+            tooltip: 'Account',
+            onSelected: (
+              value,
+            ) async {
+              if (
+                value == 'logout'
+              ) {
+                await ref
+                    .read(
+                      authControllerProvider
+                          .notifier,
+                    )
+                    .logout();
+              }
+            },
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem(
+                    enabled: false,
+                    child: Text(
+                      'Account',
+                      style: TextStyle(
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.logout,
+                        ),
+                        SizedBox(
+                          width: 12,
+                        ),
+                        Text(
+                          'Sign out',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+          ),
+        ],
+      ),
       body: navigationShell,
     );
   }
