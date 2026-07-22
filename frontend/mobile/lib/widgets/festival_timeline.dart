@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../features/festivals/festival_sets_controller.dart';
 import '../models/festival_set.dart';
+import '../utils/schedule_utils.dart';
 
 class FestivalTimeline extends ConsumerStatefulWidget {
   const FestivalTimeline({
@@ -457,9 +458,9 @@ class _FestivalTimelineState
     final earliestStart =
         orderedSets
             .map(
-              (set) => set
-                  .startTime
-                  .toLocal(),
+              (set) => toFestivalTime(
+                set.startTime,
+              ),
             )
             .reduce(
               (
@@ -477,9 +478,9 @@ class _FestivalTimelineState
     final latestEnd =
         orderedSets
             .map(
-              (set) => set
-                  .endTime
-                  .toLocal(),
+              (set) => toFestivalTime(
+                set.endTime,
+              ),
             )
             .reduce(
               (
@@ -560,12 +561,14 @@ class _FestivalTimelineState
           in orderedSets
     ) {
       final localStart =
-          festivalSet.startTime
-              .toLocal();
+          toFestivalTime(
+        festivalSet.startTime,
+      );
 
       final localEnd =
-          festivalSet.endTime
-              .toLocal();
+          toFestivalTime(
+        festivalSet.endTime,
+      );
 
       final minutesFromStart =
           localStart
@@ -1126,14 +1129,14 @@ class _TimelineSetCard
 
     final timeText =
         '${DateFormat('HH:mm').format(
-          festivalSet
-              .startTime
-              .toLocal(),
+          toFestivalTime(
+            festivalSet.startTime,
+          ),
         )} – '
         '${DateFormat('HH:mm').format(
-          festivalSet
-              .endTime
-              .toLocal(),
+          toFestivalTime(
+            festivalSet.endTime,
+          ),
         )}';
 
     final colorScheme =
