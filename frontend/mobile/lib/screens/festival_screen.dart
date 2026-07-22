@@ -961,12 +961,14 @@ class FestivalSetCard
     WidgetRef ref,
   ) {
     final localStart =
-        festivalSet.startTime
-            .toLocal();
+        toFestivalTime(
+      festivalSet.startTime,
+    );
 
     final localEnd =
-        festivalSet.endTime
-            .toLocal();
+        toFestivalTime(
+      festivalSet.endTime,
+    );
 
     final timeText =
         '${DateFormat('HH:mm').format(

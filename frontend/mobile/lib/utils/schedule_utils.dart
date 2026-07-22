@@ -1,20 +1,40 @@
+import 'package:timezone/timezone.dart' as tz;
+
 import '../models/festival_set.dart';
 
 const int festivalDayCutoffHour = 6;
 
+final tz.Location festivalTimeZone =
+    tz.getLocation(
+  'Europe/Zagreb',
+);
+
+tz.TZDateTime toFestivalTime(
+  DateTime dateTime,
+) {
+  return tz.TZDateTime.from(
+    dateTime,
+    festivalTimeZone,
+  );
+}
+
 DateTime getFestivalDay(
   DateTime dateTime,
 ) {
-  final localTime = dateTime.toLocal();
+  final festivalTime =
+      toFestivalTime(
+    dateTime,
+  );
 
-  final calendarDate = DateTime(
-    localTime.year,
-    localTime.month,
-    localTime.day,
+  final calendarDate =
+      DateTime(
+    festivalTime.year,
+    festivalTime.month,
+    festivalTime.day,
   );
 
   if (
-    localTime.hour <
+    festivalTime.hour <
     festivalDayCutoffHour
   ) {
     return calendarDate.subtract(
@@ -33,12 +53,19 @@ Map<DateTime, List<FestivalSet>>
       <DateTime, List<FestivalSet>>{};
 
   final sortedSets =
-      List<FestivalSet>.from(sets)
+      List<FestivalSet>.from(
+    sets,
+  )
         ..sort(
-          (first, second) =>
-              first.startTime.compareTo(
-            second.startTime,
-          ),
+          (
+            first,
+            second,
+          ) {
+            return first.startTime
+                .compareTo(
+              second.startTime,
+            );
+          },
         );
 
   for (final festivalSet in sortedSets) {
@@ -52,7 +79,9 @@ Map<DateTime, List<FestivalSet>>
           festivalDay,
           () => [],
         )
-        .add(festivalSet);
+        .add(
+          festivalSet,
+        );
   }
 
   return grouped;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 import 'features/auth/auth_controller.dart';
 import 'routing/app_router.dart';
@@ -9,6 +10,12 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  /*
+   * Load the IANA timezone database before any schedule
+   * dates are grouped or displayed.
+   */
+  tz.initializeTimeZones();
 
   await ScheduleWidgetService.configure();
 
