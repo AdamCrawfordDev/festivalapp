@@ -1,21 +1,28 @@
-import 'package:timezone/timezone.dart' as tz;
-
 import '../models/festival_set.dart';
 
 const int festivalDayCutoffHour = 6;
 
-final tz.Location festivalTimeZone =
-    tz.getLocation(
-  'Europe/Zagreb',
-);
-
-tz.TZDateTime toFestivalTime(
+/*
+ * Outlook Origins 2026 takes place in Croatia
+ * during July.
+ *
+ * Croatia is two hours ahead of UTC during
+ * the festival dates.
+ *
+ * Convert from the absolute API timestamp to
+ * the printed festival timetable time without
+ * using the phone's own timezone.
+ */
+DateTime toFestivalTime(
   DateTime dateTime,
 ) {
-  return tz.TZDateTime.from(
-    dateTime,
-    festivalTimeZone,
-  );
+  return dateTime
+      .toUtc()
+      .add(
+        const Duration(
+          hours: 2,
+        ),
+      );
 }
 
 DateTime getFestivalDay(
@@ -38,7 +45,9 @@ DateTime getFestivalDay(
     festivalDayCutoffHour
   ) {
     return calendarDate.subtract(
-      const Duration(days: 1),
+      const Duration(
+        days: 1,
+      ),
     );
   }
 
@@ -77,7 +86,7 @@ Map<DateTime, List<FestivalSet>>
     grouped
         .putIfAbsent(
           festivalDay,
-          () => [],
+          () => <FestivalSet>[],
         )
         .add(
           festivalSet,
